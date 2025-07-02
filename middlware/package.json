@@ -1,0 +1,25 @@
+{
+  "name": "middleware",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bunny-iLink/01-07-2025-Calculator.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/bunny-iLink/01-07-2025-Calculator/issues"
+  },
+  "homepage": "https://github.com/bunny-iLink/01-07-2025-Calculator#readme",
+  "description": "",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.0.1",
+    "express": "^5.1.0",
+    "mysql2": "^3.14.1"
+  }
+}
