@@ -1,5 +1,9 @@
-const express = require("express");
+// routes/router.js
+import express from "express";
+import { calculateResult } from "../controllers/controllers.js";
 
 const router = express.Router();
 
-module.exports = router;
+router.post("/calculate", calculateResult);
+
+export default router;
