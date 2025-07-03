@@ -30,7 +30,29 @@ export const calculateResult = async (req, res) => {
                 [new Date(), expression, result.toString()]
             );
 
-            res.json({ result });
+            // Fetch updated page 1 of history
+            const limit = 5;
+            const [rows] = await db.query(
+                `SELECT * FROM calculator_history ORDER BY time DESC LIMIT ? OFFSET ?`,
+                [limit, 0]
+            );
+
+            const [[{ total }]] = await db.query(
+                "SELECT COUNT(*) as total FROM calculator_history"
+            );
+
+            const totalPages = Math.ceil(total / limit);
+
+            // Send back both result and history
+            res.json({
+                result,
+                history: {
+                    results: rows,
+                    totalResults: total,
+                    totalPages,
+                    currentPage: 1
+                }
+            });
         } catch (dbError) {
             console.error("Database Insertion Error:", dbError);
             res.status(500).json({ error: "Failed to save result history" });

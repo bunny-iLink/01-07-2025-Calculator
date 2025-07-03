@@ -5,6 +5,8 @@ import { HistoryEntry } from '../models/history.model';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { tap, switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
@@ -18,7 +20,6 @@ export class App implements OnInit {
   history: HistoryEntry[] = [];
   currentPage = 1;
   totalPages = 1;
-  showOverview = false;
   result: string | null = null;
 
   constructor(private fb: FormBuilder, private calcService: CalculatorService) {
@@ -48,50 +49,56 @@ export class App implements OnInit {
     const expression = this.expressionControl.value;
 
     this.calcService.calculate(expression).subscribe({
-      next: (res: { result: string }) => {
-        this.result = res.result; // Save result for display
-        // this.expressionForm.reset();
-        this.loadHistory();
+      next: (res) => {
+        this.result = res.result;
+
+        // Update history directly from response
+        this.history = [...res.history.results]; // spread to force change detection
+        this.currentPage = res.history.currentPage;
+        this.totalPages = res.history.totalPages;
+
+        this.expressionForm.reset();
+        this.expressionForm.markAsUntouched();
+        this.expressionForm.markAsPristine();
       },
       error: err => {
         console.error('Calculation error:', err);
-        this.result = null; // Clear result on error
+        this.result = null;
       }
     });
   }
 
-  loadHistory(page: number = 1): void {
-    this.calcService.getHistory(page).subscribe({
-      next: data => {
-        this.history = data.results;
+  loadHistory(page: number = this.currentPage): Observable<any> {
+    return this.calcService.getHistory(page).pipe(
+      tap(data => {
+        this.history = [...data.results];
         this.currentPage = data.currentPage;
         this.totalPages = data.totalPages;
-      },
-      error: err => console.error('History loading error:', err)
-    });
+      })
+    );
   }
+
 
   deleteHistoryEntry(id: number): void {
-    this.calcService.deleteHistoryEntry(id).subscribe({
-      next: () => {
-        // Reload current page to reflect true state from server
-        // Especially important if pagination is involved
-        if (this.history.length === 1 && this.currentPage > 1) {
-          this.currentPage--;
-        }
-        this.loadHistory(this.currentPage);
-      },
-      error: err => {
-        console.error('Delete history entry error:', err);
-        // Optional: Show a user-friendly message
-      }
+    this.calcService.deleteHistoryEntry(id).pipe(
+      switchMap(() => {
+        // Calculate target page locally before calling loadHistory
+        const targetPage = (this.history.length === 1 && this.currentPage > 1)
+          ? this.currentPage - 1
+          : this.currentPage;
+        return this.loadHistory(targetPage);
+      })
+    ).subscribe({
+      next: () => { }, // Optional: add any visual feedback here
+      error: err => console.error('Delete history entry error:', err)
     });
   }
-
 
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
-      this.loadHistory(page);
+      this.loadHistory(page).subscribe({
+        error: err => console.error('Error loading page:', err)
+      });
     }
   }
 }
