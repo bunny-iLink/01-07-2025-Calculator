@@ -2,32 +2,24 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/cosmo/bootstrap.min.css">
 
 <div class="container mt-4">
-
   <!-- Header -->
-  <div class="app-header">
+  <div class="app-header position-relative text-center mb-4">
+    <!-- Info button at top right -->
+    <button type="button" class="btn position-absolute top-0 end-0 mt-2 me-2" style="color: white;"
+      title="About SmartCalc" data-bs-toggle="modal" data-bs-target="#overviewModal">
+      <i class="bi bi-info-circle"></i>
+    </button>
+
+    <!-- Centered title and subtitle -->
     <h1>SmartCalc</h1>
     <p class="lead">Angular + Node.js + C++/Java Integration</p>
-  </div>
-
-  <!-- Project Overview Card -->
-  <div class="card mb-4">
-    <div class="card-body">
-      <h4 class="card-title">Project Overview</h4>
-      <p>This application demonstrates a hybrid tech stack for evaluating math expressions using a compiled backend.</p>
-      <ul>
-        <li><strong>Frontend (Angular):</strong> Sends the math expression entered by the user.</li>
-        <li><strong>Node.js Server:</strong> Acts as middleware for routing and validation.</li>
-        <li><strong>C++ or Java Module:</strong> Handles the actual computation.</li>
-        <li><strong>Result:</strong> Sent back to the frontend and optionally stored in a database.</li>
-      </ul>
-    </div>
   </div>
 
   <!-- Expression Input Form -->
   <div class="card">
     <div class="card-body">
       <h5 class="card-title">Enter Your Expression</h5>
-      <form [formGroup]="expressionForm" novalidate>
+      <form [formGroup]="expressionForm" (ngSubmit)="onSubmit()" novalidate>
         <div class="mb-3">
           <label for="expression" class="form-label">Math Expression</label>
           <input type="text" id="expression" class="form-control"
@@ -39,13 +31,86 @@
         </div>
         <button type="submit" class="btn btn-primary" [disabled]="expressionForm.invalid">Calculate</button>
       </form>
+      <div *ngIf="result !== null" class="mt-3 text-success">
+        <strong>Result:</strong> {{ result }}
+      </div>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="card mt-4" *ngIf="history.length > 0">
+    <div class="card-body">
+      <h5 class="card-title">Calculation History</h5>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Expression</th>
+            <th>Result</th>
+            <th>Time</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let entry of history; let i = index">
+            <td>{{ (currentPage - 1) * 5 + i + 1 }}</td>
+            <td>{{ entry.expression }}</td>
+            <td>{{ entry.result }}</td>
+            <td>{{ entry.time | date:'short' }}</td>
+            <td>
+              <button class="btn btn-danger btn-sm" (click)="deleteHistoryEntry(entry.id)">
+                <i class="bi bi-trash"></i>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Pagination -->
+      <nav *ngIf="totalPages > 1" class="mt-3">
+        <ul class="pagination justify-content-center">
+          <li class="page-item" [class.disabled]="currentPage === 1">
+            <button class="page-link" (click)="goToPage(currentPage - 1)">Prev</button>
+          </li>
+          <li class="page-item" *ngFor="let p of [].constructor(totalPages); let i = index"
+            [class.active]="currentPage === i + 1">
+            <button class="page-link" (click)="goToPage(i + 1)">{{ i + 1 }}</button>
+          </li>
+          <li class="page-item" [class.disabled]="currentPage === totalPages">
+            <button class="page-link" (click)="goToPage(currentPage + 1)">Next</button>
+          </li>
+        </ul>
+      </nav>
     </div>
   </div>
 
   <!-- Footer -->
   <div class="footer">
-    <p>&copy; 2025 SmartCalc | Built with ❤️ using Angular, Node.js, and C++</p>
-    <p>Developed by __________</p>
+    <p>&copy; 2025 SmartCalc | Built with ❤️ using Angular, Node.js, and C++ | Developed by __________</p>
   </div>
+</div>
 
+<!-- Project Overview Modal -->
+<div class="modal fade" id="overviewModal" tabindex="-1" aria-labelledby="overviewModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="overviewModalLabel">Project Overview</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>This application demonstrates a hybrid tech stack for evaluating math expressions using a compiled backend.
+        </p>
+        <ul>
+          <li><strong>Frontend (Angular):</strong> Sends the math expression entered by the user.</li>
+          <li><strong>Node.js Server:</strong> Acts as middleware for routing and validation.</li>
+          <li><strong>C++ or Java Module:</strong> Handles the actual computation.</li>
+          <li><strong>Result:</strong> Sent back to the frontend and optionally stored in a database.</li>
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
 </div>
